@@ -1,9 +1,35 @@
-version: '3.8'
 services:
-  ascii-art:
-    build: .
+  frontend:
+    build: ./frontend
     ports:
-      - "3000:3000"
-      - "8000:8000"
+      - "80:3000"
     env_file:
       - .env
+  
+  python:
+    build: ./python
+    ports:
+      - "8001:5000"
+    env_file:
+      - .env
+
+  database:
+    image: postgres:15
+    ports:
+      - "8002:5432"
+    env_file:
+      - .env
+    volumes:
+      - ./database/data:/var/lib/postgresql/data
+  
+  storage:
+    build: ./storage
+    ports:
+      - "8003:9000"
+      - "8004:9001"
+    env_file:
+      - .env
+    environment:
+      MINIO_CONSOLE_ADDRESS: ":9001"
+    volumes:
+      - ./storage/data:/data
