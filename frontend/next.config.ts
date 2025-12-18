@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+// import type { NextConfig } from "next";
 
 const nextConfig = {
   output: "standalone",
@@ -6,7 +6,11 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '5mb' // or larger depending on your needs
     }
-  }
+  },
+  allowedHosts: [
+    'jared.bobich.us',
+    'bobich.us'
+  ],
 };
 
 export default nextConfig;
