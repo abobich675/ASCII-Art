@@ -22,7 +22,7 @@ export default function Gallery() {
 
       const asciiResults = [];
       for (const e of galleryContents) {
-        const asciiData = await getDatabaseAscii(e.image, e.style);
+        const asciiData = await getDatabaseAscii(e.path, e.style);
         if (!asciiData) continue
         asciiResults.push({ ...e, ...asciiData });
         setData(asciiResults);

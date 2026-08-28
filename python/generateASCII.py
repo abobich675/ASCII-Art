@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import os
 import json
 from storeImg import upload_blob_from_file, upload_blob_from_bytes
-from google.cloud import storage
+from minio import Minio
 
 load_dotenv()
 # AI
@@ -15,7 +15,11 @@ client = genai.Client(api_key = api_key)
 MODELS = ["imagen-4.0-fast-generate-001", "imagen-3.0-generate-002", "imagen-4.0-generate-001", "imagen-4.0-ultra-generate-001"]
 
 # Storage
-storage_client = storage.Client()
+minio_client = Minio(os.getenv('MINIO_ENDPOINT', 'storage:9000'),
+    access_key=os.getenv('MINIO_ROOT_USER'),
+    secret_key=os.getenv('MINIO_ROOT_PASSWORD'),
+    secure=False
+)
     
 def run_generation(prompt, style):
     global api_key
@@ -52,7 +56,7 @@ def generate_image(prompt: str):
     path = f"{random.randint(0, sys.maxsize)}.png"
     for generated_image in response.generated_images:
         image_bytes = generated_image.image.image_bytes
-        upload_blob_from_bytes("ascii-gemini-images", image_bytes, path)
+        upload_blob_from_bytes("ascii-images", image_bytes, path)
 
         # upload_blob_from_bytes("ascii-gemini-images", image_bytes, path.split("/")[1])
     #     generated_image.image.save(path)
@@ -94,12 +98,15 @@ def add_to_gallery(imagePath, ascii, style):
         json.dump(data, f, indent=2)
         
 def run_fetch(path, style):
-    bucket = storage_client.bucket("ascii-gemini-images")
-    blob = bucket.blob(path)
-    
-    image_bytes = blob.download_as_bytes()
+    response = minio_client.get_object("ascii-images", path)
+    image_bytes = response.read()
+    response.close()
+    response.release_conn()
     result = create_ascii(image_bytes, style)
     return result
 
 def run_upload(image_bytes, style):
-    return create_ascii(image_bytes, style)
+    path = f"{random.randint(0, sys.maxsize)}.png"
+    upload_blob_from_bytes("ascii-images", image_bytes, path)
+    result = create_ascii(image_bytes, style)
+    return (result, path)

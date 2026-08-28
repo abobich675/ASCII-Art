@@ -2,7 +2,7 @@
 import Banner from "@/components/ui/Banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
-import { generateImage } from "./actions";
+import { generateImage, getUploadAscii } from "./actions";
 import { useState } from "react";
 import { toast } from "sonner";
 import FormattedAscii from "@/components/ui/FormattedAscii";
@@ -34,32 +34,32 @@ export default function Home() {
   const [size, setSize] = useState<string>("normal")
   const [loading, setLoading] = useState(false)
 
-  async function getAsciiFromUpload(file: File, style: string) {
-    try {
-      const form = new FormData();
-      form.append("file", file);
-      form.append("style", style);
+  // async function getAsciiFromUpload(file: File, style: string) {
+  //   try {
+  //     const form = new FormData();
+  //     form.append("file", file);
+  //     form.append("style", style);
 
-      const response = await fetch('http://127.0.0.1:6969/api/get-upload-ascii', {
-          method: 'POST',
-          body: form
-      });
+  //     const response = await fetch('http://127.0.0.1:6969/api/get-upload-ascii', {
+  //         method: 'POST',
+  //         body: form
+  //     });
       
-      if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-      }
+  //     if (!response.ok) {
+  //         throw new Error(`HTTP error! status: ${response.status}`);
+  //     }
       
-      const data = await response.json();
-      return {
-          ascii: data.ascii,
-          style: data.style,
-          path: ""
-      };
-    } catch (error) {
-        console.error('Failed to generate image:', error);
-        return false
-    }
-  }
+  //     const data = await response.json();
+  //     return {
+  //         ascii: data.ascii,
+  //         style: data.style,
+  //         path: ""
+  //     };
+  //   } catch (error) {
+  //       console.error('Failed to generate image:', error);
+  //       return false
+  //   }
+  // }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -96,7 +96,7 @@ export default function Home() {
           return
         }
 
-        const res = await getAsciiFromUpload(currFile, style)
+        const res = await getUploadAscii(currFile, style)
 
         if (!res) {
           toast.error("Failed to generate image")
@@ -182,7 +182,7 @@ export default function Home() {
                       { ascii["path"] ?
                         <GalleryButton ascii={ascii["ascii"]} style={ascii["style"]} path={ascii["path"]} />
                         :
-                        "Gallery does not support uploaded images"
+                        "Cannot add to gallery without a storage path"
                       }
                     </div>
                   </div>

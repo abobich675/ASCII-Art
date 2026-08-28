@@ -32,10 +32,10 @@ def handle_upload():
     file = request.files["file"]
     image_bytes = file.read()
     style = request.form.get("style")
-    ascii = run_upload(image_bytes, style)
-    return jsonify({"ascii": ascii, "style": style})
+    ascii, path = run_upload(image_bytes, style)
+    return jsonify({"ascii": ascii, "style": style, "path": path})
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=6969)
+    app.run(debug=True, host='0.0.0.0', port=5000)
 

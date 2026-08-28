@@ -10,7 +10,7 @@ export async function generateImage(prompt: string, style: string): Promise<{
   path: string
 } | false> {
   try {
-      const response = await fetch('http://127.0.0.1:6969/api/generate-image', {
+      const response = await fetch('http://python:5000/api/generate-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: prompt, style: style })
@@ -70,11 +70,11 @@ export async function addToGallery(ascii: string | ColoredChar[][], style: strin
   return true
 }
 
-export async function addToDatabase(image: string, style: string, title: string = "", prompt: string = "", user: string = "", includeInGallery: boolean = false) {
+export async function addToDatabase(path: string, style: string, title: string = "", prompt: string = "", user: string = "", includeInGallery: boolean = false) {
 
   const res = await prisma.post.create({
     data: {
-      image: image,
+      path: path,
       style: style,
       title: title,
       prompt: prompt,
@@ -102,7 +102,7 @@ export async function getGalleryContents() {
 
 export async function getDatabaseAscii(path: string, style: string) {
   try {
-    const response = await fetch('http://127.0.0.1:6969/api/get-database-ascii', {
+    const response = await fetch('http://python:5000/api/get-database-ascii', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ path: path, style: style })
@@ -123,3 +123,30 @@ export async function getDatabaseAscii(path: string, style: string) {
       return false
   }
 }
+
+export async function getUploadAscii(file: File, style: string) {
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("style", style);
+
+      const response = await fetch('http://python:5000/api/get-upload-ascii', {
+          method: 'POST',
+          body: form
+      });
+      
+      if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return {
+          ascii: data.ascii,
+          style: data.style,
+          path: data.path
+      };
+    } catch (error) {
+        console.error('Failed to generate image:', error);
+        return false
+    }
+  }

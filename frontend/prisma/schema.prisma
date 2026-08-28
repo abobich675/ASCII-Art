@@ -18,7 +18,7 @@ model Post {
   title   String?
   prompt  String?
   user    String?
-  image   String
+  path    String
   gallery Boolean @default(false)
   style   String
 }

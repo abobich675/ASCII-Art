@@ -2,34 +2,65 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "80:3000"
+      - "3000:3000"
     env_file:
       - .env
+    depends_on:
+      database:
+        condition: service_healthy
   
   python:
     build: ./python
     ports:
-      - "8001:5000"
+      - "8000:5000"
     env_file:
       - .env
 
   database:
-    image: postgres:15
+    image: postgres
     ports:
-      - "8002:5432"
+      - "5432:5432"
     env_file:
       - .env
     volumes:
-      - ./database/data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  studio:
+    build:
+      context: ./frontend
+      target: builder
+    working_dir: /app
+    command: npx prisma studio --port 5555 --hostname 0.0.0.0
+    ports:
+      - "5555:5555"
+    env_file:
+      - .env
+    depends_on:
+      database:
+        condition: service_healthy
   
   storage:
+    image: minio/minio
     build: ./storage
     ports:
-      - "8003:9000"
-      - "8004:9001"
+      - "9000:9000"
+      - "9001:9001"
     env_file:
       - .env
     environment:
       MINIO_CONSOLE_ADDRESS: ":9001"
     volumes:
-      - ./storage/data:/data
+      - miniodata:/data
+    command: server /data
+
+networks: 
+  prisma-network:
+
+volumes:
+  pgdata:
+  miniodata:

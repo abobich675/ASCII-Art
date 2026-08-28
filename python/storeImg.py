@@ -1,43 +1,54 @@
 from dotenv import load_dotenv
-from google.cloud import storage
+import os
+from minio import Minio
+from io import BytesIO
 
 load_dotenv()
-storage_client = storage.Client()
+client = Minio(os.getenv('MINIO_ENDPOINT', 'storage:9000'),
+    access_key=os.getenv('MINIO_ROOT_USER'),
+    secret_key=os.getenv('MINIO_ROOT_PASSWORD'),
+    secure=False
+)
 
 def upload_blob_from_file(bucket_name, source_file_name, destination_blob_name):
     """Uploads a file to the bucket."""
-    # The ID of your GCS bucket
-    # bucket_name = "your-bucket-name"
-    # The path to your file to upload
-    # source_file_name = "local/path/to/file"
-    # The ID of your GCS object
-    # destination_blob_name = "storage-object-name"
 
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(destination_blob_name)
+    # Make the bucket if it doesn't exist.
+    found = client.bucket_exists(bucket_name)
+    if not found:
+        client.make_bucket(bucket_name)
+        print("Created bucket", bucket_name)
+    else:
+        print("Bucket", bucket_name, "already exists")
 
-    # Optional: set a generation-match precondition to avoid potential race conditions
-    # and data corruptions. The request to upload is aborted if the object's
-    # generation number does not match your precondition. For a destination
-    # object that does not yet exist, set the if_generation_match precondition to 0.
-    # If the destination object already exists in your bucket, set instead a
-    # generation-match precondition using its generation number.
-    generation_match_precondition = 0
-
-    blob.upload_from_filename(source_file_name, if_generation_match=generation_match_precondition)
-    # blob.upload_from_file(source_file_name)
-    # blob.upload_from_string(image_bytes, content_type="image/png")
-
+    # Upload the file, renaming it in the process
+    client.fput_object(
+        bucket_name, destination_blob_name, source_file_name,
+    )
     print(
-        f"File {source_file_name} uploaded to {destination_blob_name}."
+        source_file_name, "successfully uploaded as object",
+        destination_blob_name, "to bucket", bucket_name,
     )
 
 def upload_blob_from_bytes(bucket_name, image_bytes, destination_blob_name):
     """Uploads a file to the bucket."""
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(destination_blob_name)
-    blob.upload_from_string(image_bytes, content_type="image/png")
+    
+    # Make the bucket if it doesn't exist.
+    found = client.bucket_exists(bucket_name)
+    if not found:
+        client.make_bucket(bucket_name)
+        print("Created bucket", bucket_name)
+    else:
+        print("Bucket", bucket_name, "already exists")
 
-    print(
-        f"Uploaded image to {destination_blob_name}."
+    data_stream = BytesIO(image_bytes)
+
+    client.put_object(
+        bucket_name,
+        destination_blob_name,
+        data_stream,
+        length=len(image_bytes),
+        content_type="image/png",
     )
+
+    print(f"Uploaded image to {destination_blob_name}.")

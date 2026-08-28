@@ -1,5 +1,5 @@
 # Stage 1: Build Next.js
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Install dependencies
@@ -16,7 +16,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Production image
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 # Copy build from builder
@@ -29,5 +29,8 @@ COPY --from=builder /app/public ./public
 ENV NODE_ENV=production
 EXPOSE 3000
 
-# Start Next.js server (no need to regenerate Prisma client)
-CMD ["npm", "start"]
+COPY --from=builder /app/prisma ./prisma
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
+CMD ["./docker-entrypoint.sh"]
