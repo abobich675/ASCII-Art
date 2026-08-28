@@ -57,9 +57,6 @@ services:
       - miniodata:/data
     command: server /data
 
-networks: 
-  prisma-network:
-
 volumes:
   pgdata:
   miniodata:
