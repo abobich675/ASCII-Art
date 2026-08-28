@@ -46,7 +46,6 @@ services:
   
   storage:
     image: minio/minio
-    build: ./storage
     ports:
       - "9000:9000"
       - "9001:9001"
